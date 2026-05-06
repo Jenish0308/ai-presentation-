@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Architecture of Expert Systems - Interactive Seminar</title>
+    <style>
+        :root {
+            --bg-color: #0f172a; /* Slate 900 */
+            --card-bg: #1e293b; /* Slate 800 */
+            --nav-bg: #0b1120; /* Slate 950 */
+            --text-main: #f8fafc; /* Slate 50 */
+            --text-muted: #94a3b8; /* Slate 400 */
+            --accent: #22d3ee; /* Neon Cyan */
+            --accent-glow: rgba(34, 211, 238, 0.3);
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            scroll-behavior: smooth;
+            display: flex;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--nav-bg);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 30px 20px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: none;
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 15px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            display: block;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: rgba(34, 211, 238, 0.1);
+            color: var(--accent);
+            border-left: 4px solid var(--accent);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 50px;
+            max-width: 1200px;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 3.5rem;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+            margin-bottom: 10px;
+        }
+        h2 {
+            font-size: 2.2rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            margin-top: 60px;
+            margin-bottom: 30px;
+        }
+        h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+        .subtitle {
+            font-size: 1.4rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        /* Layouts & Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px var(--accent-glow);
+            border-color: var(--accent);
+        }
+
+        /* Images */
+        .section-image {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            height: 300px;
+            object-fit: cover;
+        }
+
+        /* Diagram Styles */
+        .diagram-container {
+            background-color: var(--card-bg);
+            padding: 50px 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+        }
+        .diag-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 25px 0;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+        .diag-box {
+            background: #0f172a;
+            border: 2px solid var(--accent);
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--accent-glow);
+            min-width: 200px;
+            font-size: 1.1rem;
+        }
+        .diag-box.primary {
+            background: rgba(34, 211, 238, 0.1);
+            font-size: 1.4rem;
+            padding: 30px 40px;
+        }
+
+        /* Quiz Styles */
+        .quiz-section {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            margin-top: 40px;
+            border: 2px dashed var(--accent);
+        }
+        .question {
+            margin-bottom: 30px;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .question p {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+        .options label:hover {
+            background: rgba(34, 211, 238, 0.15);
+            transform: translateX(10px);
+        }
+        button {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 300px;
+        }
+        button:hover {
+            background-color: #fff;
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+        #quiz-result {
+            margin-top: 25px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--accent);
+            text-align: center;
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 15px;
+            }
+            .nav-links {
+                display: flex;
+                overflow-x: auto;
+                white-space: nowrap;
+                gap: 10px;
+            }
+            .nav-links li { margin-bottom: 0; }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <h2>Seminar Topics</h2>
+        <ul class="nav-links">
+            <li><a href="#intro" class="nav-link">1. Introduction</a></li>
+            <li><a href="#components" class="nav-link">2. Core Components</a></li>
+            <li><a href="#architecture" class="nav-link">3. Architecture Diagram</a></li>
+            <li><a href="#chaining" class="nav-link">4. Reasoning Strategies</a></li>
+            <li><a href="#mycin" class="nav-link">5. Case Study: MYCIN</a></li>
+            <li><a href="#quiz" class="nav-link">6. Interactive Quiz</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        
+        <header>
+            <h1>The Architecture of Expert Systems</h1>
+            <p class="subtitle">Mimicking Human Expertise in Artificial Intelligence</p>
+        </header>
+
+        <!-- Section 1: Introduction -->
+        <section id="intro" class="section">
+            <h2>The Challenge & The Foundation</h2>
+            <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1200&q=80" alt="Artificial Intelligence Neural Network Concept" class="section-image">
+            <div class="grid-2">
+                <div class="card">
+                    <h3>The Problem</h3>
+                    <p>Many real-world problems lack simple, step-by-step algorithmic solutions. In fields like medicine, finance, and engineering, humans rely on deep knowledge, intuition, and years of experience to make accurate decisions when faced with incomplete data.</p>
+                </div>
+                <div class="card">
+                    <h3>The AI Solution</h3>
+                    <p><strong>Expert systems</strong> are AI programs built to replicate this professional decision-making process. By capturing the knowledge of human experts and encoding it into a digital format, these systems can provide high-level advice, diagnosis, and problem-solving at scale.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Core Components -->
+        <section id="components" class="section">
+            <h2>The Core Components</h2>
+            <p>A true expert system isn't just a database; it is a collection of interacting modules designed to reason, learn, and explain.</p>
+            <div class="grid-3">
+                <div class="card">
+                    <h3>📚 Knowledge Base</h3>
+                    <p>Unlike a standard database that stores raw data, the Knowledge Base stores rules (IF-THEN statements), facts, and domain-specific heuristics. It is the "brain" of the operation.</p>
+                </div>
+                <div class="card">
+                    <h3>⚙️ Inference Engine</h3>
+                    <p>The "reasoner" of the system. It acts as the brain's processor, taking the data provided by the user and applying the rules from the Knowledge Base to deduce new information and final conclusions.</p>
+                </div>
+                <div class="card">
+                    <h3>🗒️ Working Memory</h3>
+                    <p>The system's RAM. It holds specific facts, user inputs, and intermediate conclusions just for the duration of the current problem-solving session.</p>
+                </div>
+                <div class="card">
+                    <h3>🖥️ User Interface</h3>
+                    <p>The interaction layer. This allows non-expert users to query the system, input parameters (like a patient's symptoms), and receive understandable recommendations.</p>
+                </div>
+                <div class="card">
+                    <h3>💡 Explanation System</h3>
+                    <p>A crucial feature for trust. This module traces the Inference Engine's steps and translates them into human-readable text, explaining <em>why</em> a specific question was asked or <em>how</em> a conclusion was reached.</p>
+                </div>
+                <div class="card">
+                    <h3>📥 Knowledge Acquisition</h3>
+                    <p>The interface used by "Knowledge Engineers." It allows them to safely interview human experts and translate their knowledge into the formal rules required by the Knowledge Base.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Architecture Diagram -->
+        <section id="architecture" class="section">
+            <h2>System Architecture Diagram</h2>
+            <p>Observe how data flows from the user, into the working memory, is processed by the Inference Engine via the Knowledge Base, and is finally returned with an explanation.</p>
+            
+            <div class="diagram-container">
+                <div class="diag-row">
+                    <div class="diag-box">User / Expert</div>
+                </div>
+                <div style="color: var(--accent); font-size: 1.5rem;">⬇️ ⬆️</div>
+                <div class="diag-row">
+                    <div class="diag-box">User Interface</div>
+                    <div class="diag-box">Knowledge Acquisition Module</div>
+                </div>
+                <div style="color: var(--accent); font-size: 1.5rem;">⬇️ ⬆️</div>
+                <div class="diag-row">
+                    <div class="diag-box">Working Memory<br><span style="font-size: 0.9rem; font-weight: normal; color:var(--text-muted)">(Current Problem Data)</span></div>
+                    <div class="diag-box primary">Inference Engine<br><span style="font-size: 1rem; font-weight: normal; color:var(--bg-color)">(The Logic Processor)</span></div>
+                    <div class="diag-box">Explanation System<br><span style="font-size: 0.9rem; font-weight: normal; color:var(--text-muted)">(Justifies Logic)</span></div>
+                </div>
+                <div style="color: var(--accent); font-size: 1.5rem;">⬇️ ⬆️</div>
+                <div class="diag-row">
+                    <div class="diag-box">Knowledge Base<br><span style="font-size: 0.9rem; font-weight: normal; color:var(--text-muted)">(Stored Facts & Rules)</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Reasoning Strategies -->
+        <section id="chaining" class="section">
+            <h2>Reasoning Strategies</h2>
+            <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=1200&q=80" alt="Code and Logic Execution Concept" class="section-image">
+            <p>How does the Inference Engine actually think? It typically relies on two primary logical approaches to navigate the Knowledge Base:</p>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>➡️ Forward Chaining (Data-Driven)</h3>
+                    <p>Starts with the known facts and applies rules to extract more facts until a specific goal is reached.</p>
+                    <p><strong>Analogy:</strong> Like a detective finding clues at a crime scene (data) and following them to catch the culprit (conclusion).</p>
+                    <p style="color: var(--accent); margin-top: 10px;"><em>Best for:</em> Planning, monitoring, and synthesis tasks.</p>
+                </div>
+                <div class="card">
+                    <h3>⬅️ Backward Chaining (Goal-Driven)</h3>
+                    <p>Starts with a hypothesis or goal and works backward, looking for facts in the data that support it.</p>
+                    <p><strong>Analogy:</strong> Like a doctor who suspects a patient has the flu (hypothesis) and asks specific questions about fever and chills to confirm it.</p>
+                    <p style="color: var(--accent); margin-top: 10px;"><em>Best for:</em> Diagnostics, debugging, and prescribing.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Case Study -->
+        <section id="mycin" class="section">
+            <h2>Case Study: MYCIN</h2>
+            <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80" alt="Medical Technology Concept" class="section-image">
+            <div class="card" style="border-left: 5px solid var(--accent);">
+                <p>Developed at Stanford University in the 1970s, MYCIN stands as a monumental achievement in early artificial intelligence and expert systems.</p>
+                <br>
+                <ul>
+                    <li style="margin-left: 20px; margin-bottom: 15px;"><strong>The Purpose:</strong> It was specifically designed to diagnose severe infectious blood diseases (like meningitis) and recommend customized antibiotic therapies based on patient body weight and medical history.</li>
+                    <li style="margin-left: 20px; margin-bottom: 15px;"><strong>The Knowledge Base:</strong> It housed roughly 500 hand-coded rules concerning bacteria, infections, and drug interactions, extracted from top medical practitioners.</li>
+                    <li style="margin-left: 20px; margin-bottom: 15px;"><strong>The Logic:</strong> It heavily utilized <em>Backward Chaining</em>. It would hypothesize a disease and prompt the physician to enter lab results to confirm it. It also introduced "Certainty Factors" to handle the reality that medical data is often incomplete or unsure.</li>
+                    <li style="margin-left: 20px;"><strong>The Legacy:</strong> In blind tests, MYCIN outperformed junior doctors and matched the diagnostic accuracy of Stanford's own blood-infection experts. While never deployed in actual hospitals due to legal and technical limitations of the 1970s, it proved the commercial viability of Expert Systems.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 6: Quiz -->
+        <section id="quiz" class="section quiz-section">
+            <h2>Knowledge Check</h2>
+            <p style="margin-bottom: 20px;">Test your understanding of the architecture and concepts covered in this seminar.</p>
+            <form id="quiz-form">
+                
+                <div class="question">
+                    <p>1. Which component is responsible for translating the reasoning path into human-readable text?</p>
+                    <div class="options">
+                        <label><input type="radio" name="q1" value="a"> Inference Engine</label>
+                        <label><input type="radio" name="q1" value="b"> Explanation System</label>
+                        <label><input type="radio" name="q1" value="c"> Knowledge Base</label>
+                        <label><input type="radio" name="q1" value="d"> Working Memory</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p>2. If an Inference Engine starts with a hypothesis and looks for facts to confirm it, which strategy is it using?</p>
+                    <div class="options">
+                        <label><input type="radio" name="q2" value="a"> Data-Driven (Forward Chaining)</label>
+                        <label><input type="radio" name="q2" value="b"> Goal-Driven (Backward Chaining)</label>
+                        <label><input type="radio" name="q2" value="c"> Random Search</label>
+                        <label><input type="radio" name="q2" value="d"> Machine Learning</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p>3. In the MYCIN system, what was used to handle incomplete or unsure medical data?</p>
+                    <div class="options">
+                        <label><input type="radio" name="q3" value="a"> Certainty Factors</label>
+                        <label><input type="radio" name="q3" value="b"> Cloud Computing</label>
+                        <label><input type="radio" name="q3" value="c"> Forward Chaining</label>
+                        <label><input type="radio" name="q3" value="d"> Neural Networks</label>
+                    </div>
+                </div>
+
+                <button type="button" onclick="calculateScore()">Submit Answers</button>
+                <div id="quiz-result"></div>
+            </form>
+        </section>
+
+    </div>
+
+    <script>
+        // Quiz Logic
+        function calculateScore() {
+            let score = 0;
+            const totalQuestions = 3;
+            
+            const q1 = document.querySelector('input[name="q1"]:checked');
+            const q2 = document.querySelector('input[name="q2"]:checked');
+            const q3 = document.querySelector('input[name="q3"]:checked');
+
+            if (!q1 || !q2 || !q3) {
+                alert("Please answer all questions before submitting.");
+                return;
+            }
+
+            if (q1.value === "b") score++;
+            if (q2.value === "b") score++;
+            if (q3.value === "a") score++;
+
+            const resultDiv = document.getElementById("quiz-result");
+            resultDiv.style.display = "block";
+            
+            if (score === totalQuestions) {
+                resultDiv.innerHTML = `🎉 Perfect Score! You got ${score}/${totalQuestions}. You're an expert system yourself!`;
+                resultDiv.style.color = "#22d3ee"; 
+            } else {
+                resultDiv.innerHTML = `You got ${score}/${totalQuestions}. Review the topics on the left and try again!`;
+                resultDiv.style.color = "#f43f5e"; 
+            }
+        }
+
+        // Active Sidebar Link Logic based on scroll
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
